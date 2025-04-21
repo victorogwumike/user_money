@@ -1,5 +1,8 @@
 from pymongo import MongoClient
 from fastapi import FastAPI
+from dotenv import load_dotenv
+load_dotenv()  # This loads environment variables from a .env file
+
 import logging
 import time
 
@@ -10,7 +13,7 @@ def get_mongo_client():
     retries = 5
     while retries > 0:
         try:
-            client = MongoClient("mongodb://localhost:27017", serverSelectionTimeoutMS=5000)
+            client = MongoClient("mongodb://localhost:27017", serverSelectionTimeoutMS=500000)
             client.admin.command('ping')  # Test if MongoDB is responsive
             return client
         except Exception as e:
