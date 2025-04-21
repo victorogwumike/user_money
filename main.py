@@ -1,17 +1,29 @@
+from pymongo import MongoClient
 from fastapi import FastAPI
-from database import init_db
-import router.user as user_router
-import router.account as account_router
-import router.transaction as transaction_router
+import logging
+import time
 
 app = FastAPI()
 
-@app.on_event("startup")
-async def start_db():
-    await init_db()
+# Retry logic to connect to MongoDB
+def get_mongo_client():
+    retries = 5
+    while retries > 0:
+        try:
+            client = MongoClient("mongodb://localhost:27017", serverSelectionTimeoutMS=5000)
+            client.admin.command('ping')  # Test if MongoDB is responsive
+            return client
+        except Exception as e:
+            logging.error(f"MongoDB connection failed: {e}")
+            retries -= 1
+            time.sleep(5)  # Wait before retrying
 
-app.include_router(user_router.router)
-app.include_router(account_router.router)
-app.include_router(transaction_router.router)
+    raise Exception("Failed to connect to MongoDB after several attempts")
 
+# Establish MongoDB connection
+client = get_mongo_client()
+db = client['mydatabase']
 
+@app.get("/")
+async def root():
+    return {"message": "MongoDB connected successfully"}
